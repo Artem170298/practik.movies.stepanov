@@ -1,0 +1,28 @@
+.genre-movie {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 46px;
+    max-width: auto;
+    height: 20px;
+    border-radius: 2px;
+    font-family: Inter;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 100%;
+    letter-spacing: 0%;
+    color: #000000A6;
+    border: 1px solid #000000A6;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    padding: 2px;
+}
+
+.genres-list {
+    display: flex;
+    flex-wrap: wrap;
+    list-style-type: none;
+    justify-content: start;
+    padding: 0;
+    margin-top: 0;
+}

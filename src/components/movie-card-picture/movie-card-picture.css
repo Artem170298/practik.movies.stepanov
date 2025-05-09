@@ -1,0 +1,11 @@
+.picture-card {
+    width: 183px;
+    height: 279px;
+    border: 1px solid salmon;
+    box-sizing: border-box;
+}
+
+.picture-card img {
+    width: 100%;
+    height: 100%;
+}

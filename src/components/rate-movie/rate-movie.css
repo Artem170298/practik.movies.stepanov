@@ -1,0 +1,10 @@
+.rate-movie {
+    margin-left: auto;
+    margin-right: auto;
+    white-space: nowrap
+}
+
+.ant-rate-star {
+    margin-inline-end: 4px !important;
+    /* уменьшить отступ, если нужно */
+}

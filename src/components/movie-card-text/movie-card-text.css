@@ -1,0 +1,80 @@
+.card-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 268px;
+    height: 279px;
+    border: 1px solid black;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    padding: 15px;
+    overflow: hidden;
+
+}
+
+.dganers {
+    display: flex;
+    justify-content: space-around;
+}
+
+.movie-name {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: auto;
+    font-family: Inter;
+    font-weight: bold;
+    font-size: 20px;
+    line-height: 28px;
+    letter-spacing: 0%;
+    vertical-align: middle;
+    margin-bottom: 7px;
+    margin-top: 0;
+}
+
+.data-relis {
+    width: 83px;
+    height: 22px;
+    font-family: Inter;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 22px;
+    vertical-align: middle;
+    color: #827E7E;
+    margin-top: 0;
+    margin-bottom: 7px;
+}
+
+.opisanie {
+    display: inline-block;
+    width: 228px;
+    height: auto;
+    font-family: Inter;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 22px;
+    letter-spacing: 0px;
+    color: #000000;
+    margin-top: 0px;
+    margin-bottom: 5px;
+    overflow: hidden;
+    flex-grow: 1;
+
+    /* display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    /* Число строк */
+    /* -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis; */
+
+}
+
+.text-ram {
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+    padding: 0;
+
+}
