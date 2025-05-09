@@ -2,15 +2,24 @@ import React from 'react';
 import { Flex, Progress } from 'antd';
 import './rating.css';
 
-const Rating = () => (
+const Rating = ({ rating, color }) => (
   <Flex gap="small" wrap>
     <Progress
       type="circle"
-      percent={7.5 * 10} // 7.5 → 75%
-      strokeColor="#E9D100"
+      percent={10 * 10} // 7.5 → 75%
+      strokeColor={color}
       trailColor="#e6f7ff"
       size={35}
-      format={() => <span style={{ color: '#52c41a', fontWeight: 'bold' }}>7.5</span>}
+      format={() => (
+        <span
+          style={{
+            color: ` #000000`,
+            fontWeight: 'bold',
+          }}
+        >
+          {rating}
+        </span>
+      )}
     />
   </Flex>
 );

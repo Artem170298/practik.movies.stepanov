@@ -10,7 +10,13 @@ export default class MovieCard extends React.Component {
     return (
       <div className="movie-card">
         <MoviesCardPicture picture={el.poster_path} />
-        <MoviesCardText title={el.title} date={el.release_date} opisanie={el.overview} genres={el.genre_ids} />
+        <MoviesCardText
+          title={el.title}
+          date={el.release_date}
+          opisanie={el.overview}
+          genres={el.genre_ids}
+          rating={el.vote_average}
+        />
       </div>
     );
   }

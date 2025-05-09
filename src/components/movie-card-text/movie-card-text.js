@@ -4,7 +4,7 @@ import Genres from '../genres';
 import RateMovie from '../rate-movie';
 import Rating from '../rating';
 
-export default function MoviesCardText({ title, date, opisanie, genres }) {
+export default function MoviesCardText({ title, date, opisanie, genres, rating }) {
   const truncateDescription = (text, maxLength = 200) => {
     if (!text) return '';
     if (text.length <= maxLength) return text;
@@ -15,12 +15,25 @@ export default function MoviesCardText({ title, date, opisanie, genres }) {
     return truncated.length > 0 ? `${truncated}...` : `${text.substr(0, maxLength)}...`;
   };
 
+  const rate = +rating.toFixed(1);
+  let strokeColor = '';
+
+  if (rate <= 3) {
+    strokeColor = ' #E90000';
+  } else if (rate > 3 && rate <= 5) {
+    strokeColor = ' #E97E00';
+  } else if (rate > 5 && rate <= 7) {
+    strokeColor = ' #E9D100';
+  } else {
+    strokeColor = ' #66E900';
+  }
+
   return (
     <div className="card-text">
       <div className="text-ram">
         <h2 className="movie-name">
           {title}
-          {<Rating />}
+          {<Rating rating={rate} color={strokeColor} />}
         </h2>
 
         <p className="data-relis">{date}</p>
