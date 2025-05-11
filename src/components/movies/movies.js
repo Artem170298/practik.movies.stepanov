@@ -8,7 +8,7 @@ import { Error, NotFound, Offline } from '../error';
 export default class Movies extends Component {
   render() {
     const { state, onChange } = this.props;
-    const { movies, loading, error, isOffline, current } = state;
+    const { movies, loading, error, isOffline, current, totalPages } = state;
 
     if (isOffline) {
       return <Offline />;
@@ -18,9 +18,8 @@ export default class Movies extends Component {
       return <Spinner />;
     }
 
-    const { message } = error;
-    if (error.status) {
-      return <Error message={message} />;
+    if (error && error.status) {
+      return <Error message={error.message} />;
     }
 
     if (!movies || movies.length === 0) {
@@ -39,7 +38,7 @@ export default class Movies extends Component {
         <Pagination
           current={current}
           onChange={onChange()}
-          total={10000}
+          total={totalPages * 20}
           showSizeChanger={false}
           defaultPageSize={20}
         />
