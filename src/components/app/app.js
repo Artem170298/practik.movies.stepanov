@@ -1,15 +1,22 @@
-import React, { useState, Component } from 'react';
+import React, { useState, Component, createContext } from 'react';
 import './app.css';
-import { Pagination } from 'antd';
+import { message } from 'antd';
+
 import getResourse from '../../services/swapi-servic';
 import Movies from '../movies/movies';
 import SearchInput from '../searchInput/search-input';
 import Tabs from '../tabs';
+import Reted from '../rated';
 
 export default class App extends Component {
+  constructor(props) {
+    super(props);
+    this.controller = null;
+  }
+
   state = {
     loading: true,
-    movies: null,
+    movies: [],
     error: {
       status: false,
       message: null,
@@ -18,6 +25,14 @@ export default class App extends Component {
     current: 1,
     query: '',
     totalPages: null,
+    guestSessionId: localStorage.getItem('tmdb_guest_session') || null,
+    ratedMovies: [],
+    rated: false,
+
+    moviesLoading: false,
+    selectedMovie: null,
+    rating: 0,
+    initialized: false,
   };
 
   loadFirstPageMovies = async () => {
@@ -38,8 +53,90 @@ export default class App extends Component {
 
     window.addEventListener('online', this.handleConnectionChange);
     window.addEventListener('offline', this.handleConnectionChange);
+
     this.loadFirstPageMovies();
+    this.initializeGuestSession();
   }
+
+  initializeGuestSession = async () => {
+    // иницилизация сессии
+    // Если уже есть сессия, не создаём новую
+    if (this.state.guestSessionId) return;
+
+    this.setState({ loading: true, error: null });
+
+    const sessionId = await this.createGuestSession();
+
+    try {
+      this.setState({ guestSessionId: sessionId });
+      localStorage.setItem('tmdb_guest_session', sessionId);
+    } catch (error) {
+      this.setState({ error: error.message });
+      console.error('Не удалось создать сессию');
+    } finally {
+      this.setState({ loading: false });
+    }
+  };
+
+  createGuestSession = async () => {
+    // создание гостевой сессии
+    const response = await getResourse(`https://api.themoviedb.org/3/authentication/guest_session/new`);
+
+    if (!response.success) {
+      throw new Error('Ошибка создания сессии');
+    }
+    return response.guest_session_id;
+  };
+
+  fetchRatedMovies = async () => {
+    // запрос оценнёных фильмов
+    const { guestSessionId } = this.state;
+
+    this.setState({ moviesLoading: true });
+
+    try {
+      const response = await getResourse(`https://api.themoviedb.org/3/guest_session/${guestSessionId}/rated/movies`);
+      const data = await response.json();
+
+      this.setState({
+        ratedMovies: data.results || [],
+        moviesLoading: false,
+      });
+    } catch (error) {
+      console.error('Ошибка загрузки оценок');
+      this.setState({
+        moviesLoading: false,
+        error: {
+          message: 'Ошибка загрузки оценок',
+        },
+      });
+    }
+  };
+
+  handleRateMovie = async (movieId, rating) => {
+    const { guestSessionId } = this.props;
+
+    try {
+      const response = await getResourse(
+        `https://api.themoviedb.org/3/movie/${movieId}/rating?guest_session_id=${guestSessionId}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            value: rating, // Конвертация 5★ → 10★
+          }),
+        }
+      );
+
+      if (response.success) {
+        console.log('Оценка сохранена!');
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
 
   componentDidUpdate(prevState) {}
 
@@ -47,8 +144,8 @@ export default class App extends Component {
     // Отписываемся от событий при размонтировании
     window.removeEventListener('online', this.handleConnectionChange);
     window.removeEventListener('offline', this.handleConnectionChange);
-    clearTimeout(this.timer);
     if (this.controller) this.controller.abort();
+    clearTimeout(this.timer);
   }
 
   handleConnectionChange = () => {
@@ -57,39 +154,49 @@ export default class App extends Component {
 
   handleSearchChange = (query) => {
     // отслеживание изменения инпута
-    this.setState({ query }, () => {
-      this.debouncedSearch();
-    });
+
+    this.setState(
+      {
+        query,
+        loading: true,
+      },
+      () => {
+        this.searchMovies(1);
+        this.setState({
+          loading: false,
+        });
+      }
+    );
   };
 
-  debouncedSearch = () => {
-    // задержка запроса
-    clearTimeout(this.timer);
-    this.timer = setTimeout(() => {
-      this.searchMovies(1);
-    }, 500);
-  };
+  // debounce = (func, delay) => {
+  //   let timer;
+  //   return (...args) => {
+  //     clearTimeout(timer);
+  //     timer = setTimeout(() => {
+  //       func.apply(this, args);
+  //     }, delay);
+  //   };
+  // };
 
   searchMovies = async (page = 1) => {
     // запрос по названию
     const { query } = this.state;
     clearTimeout(this.timer);
-    if (!query.trim()) {
+    if (!query || !query.trim()) {
       this.loadFirstPageMovies();
-      // this.setState({ movies: [], current: 1, totalPages: 1 });
       return;
     }
 
     // Отменяем предыдущий запрос
-    if (this.controller) this.controller.abort();
     this.controller = new AbortController();
+    if (this.controller) this.controller.abort();
 
     this.setState({ loading: true });
 
     try {
       const url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&page=${page}`;
       const data = await getResourse(url, { signal: this.controller.signal });
-      console.log(data);
 
       this.setState({
         movies: data?.results || [],
@@ -145,27 +252,43 @@ export default class App extends Component {
   };
 
   onChange = (page) => {
-    // отслеживание текущей страницы
-    this.setState({
-      current: page,
+    this.setState({ current: page }, () => {
+      this.state.query ? this.searchMovies(page) : this.fetchMovies();
     });
-    this.fetchMovies(page);
+  };
+
+  onRated = () => {
+    this.setState({ rated: true });
+  };
+
+  onSearch = () => {
+    this.setState({ rated: false }, () => console.log(this.state.rated));
   };
 
   render() {
-    const { query } = this.state;
+    const { query, rated, movies, loading } = this.state;
+
     return (
       <div className="app">
-        <Tabs />
-        <SearchInput value={query} onChange={this.handleSearchChange} />
-        <Movies state={this.state} onChange={() => this.searchMovies} />
-        {/* <Pagination
-          current={current}
-          onChange={this.onChange}
-          total={10000}
-          showSizeChanger={false}
-          defaultPageSize={20}
-        /> */}
+        <Tabs
+          onClickRated={() => {
+            this.onRated();
+          }}
+          onClickSearch={() => {
+            this.onSearch();
+          }}
+          onInciliz={() => {
+            this.initializeGuestSession();
+          }}
+        />
+
+        <SearchInput value={query} searchMov={this.handleSearchChange} />
+
+        <Movies
+          state={this.state}
+          selectMovie={(id, title) => this.selectMovie(id, title)}
+          onChange={() => this.onChange}
+        />
       </div>
     );
   }

@@ -7,8 +7,8 @@ import { Error, NotFound, Offline } from '../error';
 
 export default class Movies extends Component {
   render() {
-    const { state, onChange } = this.props;
-    const { movies, loading, error, isOffline, current, totalPages } = state;
+    const { state, onChange, handleRateMovie } = this.props;
+    const { movies, loading, error, isOffline, current, totalPages, ratedMovies, rated, guestSessionId } = state;
 
     if (isOffline) {
       return <Offline />;
@@ -26,9 +26,15 @@ export default class Movies extends Component {
       return <NotFound message={'No movies found'} />;
     }
 
-    const moviesList = movies.map((el) => (
+    let liMovies;
+    if (!rated) {
+      liMovies = [...movies];
+    } else {
+      liMovies = [...ratedMovies];
+    }
+    const moviesList = liMovies.map((el) => (
       <li key={el.id}>
-        <MovieCard el={el} />
+        <MovieCard el={el} handleRateMovie={handleRateMovie} guestSessionId={guestSessionId} />
       </li>
     ));
 

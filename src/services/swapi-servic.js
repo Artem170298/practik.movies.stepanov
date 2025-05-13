@@ -11,16 +11,12 @@ export default async function getResourse(url) {
     redirect: 'follow',
   };
   try {
-    const result = await fetch(url, requestOptions).then((response) => response.json());
-    return result;
+    const result = await fetch(url, requestOptions);
+
+    if (!result.ok) throw new Error(result.statusText); // .then((response) => response.json());
+    return result.json();
   } catch (err) {
     console.log(err.message);
     return null;
   }
-}
-
-export async function getGenre(el) {
-  const r = await getResourse(`https://api.themoviedb.org/3/genre/${el}`);
-
-  return r;
 }

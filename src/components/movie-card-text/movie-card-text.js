@@ -1,10 +1,19 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useContext } from 'react';
 import './movie-card-text.css';
 import Genres from '../genres';
 import RateMovie from '../rate-movie';
 import Rating from '../rating';
 
-export default function MoviesCardText({ title, date, opisanie, genres, rating }) {
+export default function MoviesCardText({
+  title,
+  date,
+  opisanie,
+  genres,
+  rating,
+  handleRateMovie,
+  movieId,
+  guestSessionId,
+}) {
   const truncateDescription = (text, maxLength = 200) => {
     if (!text) return '';
     if (text.length <= maxLength) return text;
@@ -40,7 +49,7 @@ export default function MoviesCardText({ title, date, opisanie, genres, rating }
         <Genres genres={genres} />
         <p className="opisanie">{truncateDescription(opisanie, 140)}</p>
       </div>
-      <RateMovie />
+      <RateMovie handleRateMovie={() => handleRateMovie} movieId={movieId} guestSessionId={guestSessionId} />
     </div>
   );
 }
