@@ -283,10 +283,12 @@ export default class App extends Component {
 
   onRated = () => {
     this.setState({ rated: true, query: '' });
+    this.fetchRatedMoviesAll();
   };
 
   onSearch = () => {
     this.setState({ rated: false, query: '' });
+    this.fetchRatedMoviesAll();
   };
 
   render() {
