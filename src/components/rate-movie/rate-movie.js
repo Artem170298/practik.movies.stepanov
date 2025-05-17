@@ -32,7 +32,8 @@ class RateMovie extends Component {
       throw new Error('Не указаны обязательные параметры');
     }
 
-    const API_KEY = process.env.REACT_APP_TMDB_API_KEY; // Из .env
+    const API_KEY =
+      'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJlYTBhYmU4Njk5MTM0M2I2OGViMzkxOTdkMDc1YjM4MSIsIm5iZiI6MTc0NTY4OTE1My45NjYsInN1YiI6IjY4MGQxYTQxNzFkZWRjYjhhY2VhYjdjYiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.w-TG7uj-ySI6DaATbIizi4u8TcNiKMwsNDW-2dG-wYw'; // Из .env
 
     const response = await fetch(
       `https://api.themoviedb.org/3/movie/${movieId}/rating` +
