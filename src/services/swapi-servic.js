@@ -14,9 +14,9 @@ export default async function getResourse(url) {
     const result = await fetch(url, requestOptions);
 
     if (!result.ok) throw new Error(result.statusText); // .then((response) => response.json());
-    return result.json();
+    return await result.json();
   } catch (err) {
-    console.log(err.message);
+    console.error(`Fetch error`);
     return null;
   }
 }

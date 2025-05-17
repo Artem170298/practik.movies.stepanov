@@ -5,7 +5,7 @@ import './movie-card.css';
 
 export default class MovieCard extends React.Component {
   render() {
-    const { el, handleRateMovie, guestSessionId } = this.props;
+    const { el, handleRateMovie, guestSessionId, rated, myRatingel } = this.props;
 
     return (
       <div className="movie-card">
@@ -19,6 +19,9 @@ export default class MovieCard extends React.Component {
           rating={el.vote_average}
           handleRateMovie={() => handleRateMovie}
           guestSessionId={guestSessionId}
+          myRating={el.rating}
+          myRatingel={myRatingel}
+          rated={rated}
         />
       </div>
     );

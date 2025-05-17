@@ -4,7 +4,7 @@
     justify-content: space-between;
     width: 268px;
     height: 279px;
-    border: 1px solid black;
+
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -60,14 +60,6 @@
     margin-bottom: 5px;
     overflow: hidden;
     flex-grow: 1;
-
-    /* display: -webkit-box;
-    -webkit-line-clamp: 4;
-    line-clamp: 4;
-    /* Число строк */
-    /* -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis; */
 
 }
 

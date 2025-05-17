@@ -1,12 +1,13 @@
-import React, { useState, Component, createContext } from 'react';
+import React, { Component } from 'react';
 import './app.css';
-import { message } from 'antd';
 
+import { message } from 'antd';
+import { indexOf, update } from 'lodash';
 import getResourse from '../../services/swapi-servic';
 import Movies from '../movies/movies';
 import SearchInput from '../searchInput/search-input';
 import Tabs from '../tabs';
-import Reted from '../rated';
+import { Error } from '../error';
 
 export default class App extends Component {
   constructor(props) {
@@ -27,12 +28,15 @@ export default class App extends Component {
     totalPages: null,
     guestSessionId: localStorage.getItem('tmdb_guest_session') || null,
     ratedMovies: [],
+
     rated: false,
 
     moviesLoading: false,
     selectedMovie: null,
     rating: 0,
     initialized: false,
+    ratedMoviesTotalPages: null,
+    allRatedMovies: [],
   };
 
   loadFirstPageMovies = async () => {
@@ -53,10 +57,14 @@ export default class App extends Component {
 
     window.addEventListener('online', this.handleConnectionChange);
     window.addEventListener('offline', this.handleConnectionChange);
-
-    this.loadFirstPageMovies();
-    this.initializeGuestSession();
+    this.loadDataStart();
   }
+
+  loadDataStart = async () => {
+    await this.initializeGuestSession();
+    await this.fetchRatedMoviesAll();
+    await this.loadFirstPageMovies();
+  };
 
   initializeGuestSession = async () => {
     // иницилизация сессии
@@ -71,8 +79,7 @@ export default class App extends Component {
       this.setState({ guestSessionId: sessionId });
       localStorage.setItem('tmdb_guest_session', sessionId);
     } catch (error) {
-      this.setState({ error: error.message });
-      console.error('Не удалось создать сессию');
+      this.setState({ error: { message: error.message } });
     } finally {
       this.setState({ loading: false });
     }
@@ -88,57 +95,78 @@ export default class App extends Component {
     return response.guest_session_id;
   };
 
-  fetchRatedMovies = async () => {
+  fetchPage = async (page) => {
+    const { guestSessionId } = this.state;
+    try {
+      const res = await getResourse(
+        `https://api.themoviedb.org/3/guest_session/${guestSessionId}/rated/movies?page=${page}&per_page=500`
+      );
+
+      return res.results || [];
+    } catch (error) {
+      console.error(`Error fetching page ${page}:`, error);
+      return [];
+    }
+  };
+
+  fetchRatedMoviesAll = async () => {
+    // получение полного списка проголосованных фильмов
+
+    try {
+      const { guestSessionId } = this.state;
+      const response = await getResourse(`https://api.themoviedb.org/3/guest_session/${guestSessionId}/rated/movies`);
+
+      const pagesArr = Array.from({ length: response.total_pages }, (_, i) => i + 1);
+
+      this.setState({ loading: true });
+      const allResults = await Promise.all(
+        pagesArr.map((page) =>
+          getResourse(`https://api.themoviedb.org/3/guest_session/${guestSessionId}/rated/movies?page=${page}`)
+        )
+      );
+
+      // Объединяем результаты
+      const allMovies = allResults.flatMap((res) => res.results || []);
+
+      this.setState({
+        allRatedMovies: allMovies,
+        loading: false,
+      });
+    } catch (error) {
+      this.setState({
+        loading: false,
+        error: 'Failed to load movies',
+      });
+    }
+  };
+
+  fetchRatedMovies = async (page = 1) => {
     // запрос оценнёных фильмов
     const { guestSessionId } = this.state;
 
     this.setState({ moviesLoading: true });
 
     try {
-      const response = await getResourse(`https://api.themoviedb.org/3/guest_session/${guestSessionId}/rated/movies`);
-      const data = await response.json();
-
+      const response = await getResourse(
+        `https://api.themoviedb.org/3/guest_session/${guestSessionId}/rated/movies?page=${page}&per_page=500`
+      );
       this.setState({
-        ratedMovies: data.results || [],
+        ratedMovies: response.results || [],
+        totalPages: response.total_results || 1, // или response.total_pages || 1 (значение по умолчанию)
         moviesLoading: false,
       });
+
+      return response.results || [];
     } catch (error) {
-      console.error('Ошибка загрузки оценок');
       this.setState({
         moviesLoading: false,
         error: {
           message: 'Ошибка загрузки оценок',
         },
       });
+      return [];
     }
   };
-
-  handleRateMovie = async (movieId, rating) => {
-    const { guestSessionId } = this.props;
-
-    try {
-      const response = await getResourse(
-        `https://api.themoviedb.org/3/movie/${movieId}/rating?guest_session_id=${guestSessionId}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            value: rating, // Конвертация 5★ → 10★
-          }),
-        }
-      );
-
-      if (response.success) {
-        console.log('Оценка сохранена!');
-      }
-    } catch (error) {
-      console.error(error.message);
-    }
-  };
-
-  componentDidUpdate(prevState) {}
 
   componentWillUnmount() {
     // Отписываемся от событий при размонтировании
@@ -159,6 +187,7 @@ export default class App extends Component {
       {
         query,
         loading: true,
+        rated: false,
       },
       () => {
         this.searchMovies(1);
@@ -168,16 +197,6 @@ export default class App extends Component {
       }
     );
   };
-
-  // debounce = (func, delay) => {
-  //   let timer;
-  //   return (...args) => {
-  //     clearTimeout(timer);
-  //     timer = setTimeout(() => {
-  //       func.apply(this, args);
-  //     }, delay);
-  //   };
-  // };
 
   searchMovies = async (page = 1) => {
     // запрос по названию
@@ -209,7 +228,7 @@ export default class App extends Component {
       if (error.name !== 'AbortError') {
         this.setState({
           loading: false,
-          error: 'Ошибка при поиске фильмов',
+          error: { message: 'Ошибка при поиске фильмов' },
         });
       }
     }
@@ -227,6 +246,7 @@ export default class App extends Component {
 
     try {
       const { current: page } = this.state;
+
       const movies = await getResourse(`https://api.themoviedb.org/3/movie/popular?language=en-US&page=${page}`);
       this.setState({
         movies: movies.results,
@@ -252,25 +272,32 @@ export default class App extends Component {
   };
 
   onChange = (page) => {
+    if (!this.state.rated) {
+      this.setState({ current: page }, () => {
+        this.state.query ? this.searchMovies(page) : this.fetchMovies();
+      });
+    }
+
     this.setState({ current: page }, () => {
-      this.state.query ? this.searchMovies(page) : this.fetchMovies();
+      this.fetchRatedMovies(page);
     });
   };
 
   onRated = () => {
-    this.setState({ rated: true });
+    this.setState({ rated: true, query: '' });
   };
 
   onSearch = () => {
-    this.setState({ rated: false }, () => console.log(this.state.rated));
+    this.setState({ rated: false, query: '' });
   };
 
   render() {
-    const { query, rated, movies, loading } = this.state;
+    const { query, rated, error } = this.state;
 
     return (
       <div className="app">
         <Tabs
+          rated={rated}
           onClickRated={() => {
             this.onRated();
           }}
@@ -279,6 +306,12 @@ export default class App extends Component {
           }}
           onInciliz={() => {
             this.initializeGuestSession();
+          }}
+          fetchRatedMovies={() => {
+            this.fetchRatedMovies();
+          }}
+          loadFirstPageMovies={() => {
+            this.loadFirstPageMovies();
           }}
         />
 

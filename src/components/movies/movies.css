@@ -1,7 +1,7 @@
 .movies {
     width: 100%;
     height: auto;
-    border: 1px solid red;
+
     box-sizing: border-box;
     display: grid;
     grid-template-columns: repeat(2, 451px);

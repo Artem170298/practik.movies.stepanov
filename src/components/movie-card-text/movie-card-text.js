@@ -13,6 +13,9 @@ export default function MoviesCardText({
   handleRateMovie,
   movieId,
   guestSessionId,
+  myRating,
+  myRatingel,
+  rated,
 }) {
   const truncateDescription = (text, maxLength = 200) => {
     if (!text) return '';
@@ -49,7 +52,14 @@ export default function MoviesCardText({
         <Genres genres={genres} />
         <p className="opisanie">{truncateDescription(opisanie, 140)}</p>
       </div>
-      <RateMovie handleRateMovie={() => handleRateMovie} movieId={movieId} guestSessionId={guestSessionId} />
+      <RateMovie
+        handleRateMovie={() => handleRateMovie}
+        movieId={movieId}
+        guestSessionId={guestSessionId}
+        myRating={myRating}
+        myRatingel={myRatingel}
+        rated={rated}
+      />
     </div>
   );
 }
