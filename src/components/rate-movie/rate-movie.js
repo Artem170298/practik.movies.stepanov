@@ -13,7 +13,7 @@ class RateMovie extends Component {
     this.setState({ rating: value, loading: true });
 
     try {
-      await this.rateMovieOnServer(value); // Конвертация 5★ → 10★
+      await this.rateMovieOnServer(value);
       this.setState({
         rating: value,
       });
@@ -71,7 +71,6 @@ class RateMovie extends Component {
         className="rate-movie"
         count={10}
         allowHalf
-        // value={this.state.rating}
         value={value}
         onChange={this.handleRatingChange}
         disabled={this.state.loading}

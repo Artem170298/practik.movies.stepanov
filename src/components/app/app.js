@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import './app.css';
 
-import { message } from 'antd';
-import { indexOf, update } from 'lodash';
 import getResourse from '../../services/swapi-servic';
 import Movies from '../movies/movies';
 import SearchInput from '../searchInput/search-input';

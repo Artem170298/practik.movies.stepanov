@@ -6,7 +6,7 @@ const Rating = ({ rating, color }) => (
   <Flex gap="small" wrap>
     <Progress
       type="circle"
-      percent={10 * 10} // 7.5 → 75%
+      percent={10 * 10}
       strokeColor={color}
       trailColor="#e6f7ff"
       size={35}
